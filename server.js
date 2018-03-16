@@ -1,5 +1,5 @@
 // Module dependencies.
-var application_root = __dirname, express = require( 'express' ); //Web framework
+var express = require( 'express' ); //Web framework
 var http = require('http');
 var bodyParser = require('body-parser'); 
 var config = require('./config');
@@ -40,7 +40,8 @@ sendRouter.post('/email', function (req, res) {
     res.send({ "code": 400, "result": "bad request" });
     return;
   } else {
-    res.send({ "code": 200, "result": "sent" });
+    const result = messageHandler.sendEmail(body.email, body.content);
+    res.send({ "code": 200, "result": "sent", result });
   }
 });
 

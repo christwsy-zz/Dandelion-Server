@@ -6,6 +6,8 @@ var bitly = require('bitly');
 var config = require('../config');
 var bitlyClient= bitly(config.BITLY.ACCESS_TOKEN);
 var fs = require('fs');
+var path = require('path');
+var application_root = __dirname; //Web framework
 
 // Send text message 
 exports.sendSms = function(phoneNumber, content) {
@@ -18,11 +20,12 @@ exports.sendSms = function(phoneNumber, content) {
 // Send text message to a phone number with content
 exports.sendEmail = function(email, content) {
   processContent(content, function(url) {
-    fs.readFile('./template.html', 'utf-8', function (err, data) {
+    fs.readFile(path.join(application_root, '/template.html'), 'utf-8', function (err, data) {
       if (err) {
-        console.error(error);
+        console.error(err);
         return;
       }
+      // replace the placeholder for the actual url
       data = data.replace(/<%URL%>/g, url);
       emailService.sendEmail(email, data);
     });
@@ -33,21 +36,22 @@ exports.sendEmail = function(email, content) {
 function processContent(content, callback) {
   var messageId = uuid.v1();
   storeMessage(messageId, content);
-  shortenResult.then(function (data) {
+  generateLink(messageId).then(function (data) {
     var resultUrl = '';
-    if (data.code == 200) {
+    if (data.status_code == 200) {
       resultUrl = data.data.url;
     } else {
       resultUrl = config.SERVER_URL + messageId;
     }
     callback(resultUrl);
-  }).catch(function (error) {
+  }, function(error) {
     console.error(error);
   });
 }
 
 function generateLink(messageId) {
   var link = config.SERVER_URL + messageId;
+  console.log(link);
   return bitlyClient.shorten(link);
 }
 
